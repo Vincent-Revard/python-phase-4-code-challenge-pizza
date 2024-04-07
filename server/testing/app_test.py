@@ -58,7 +58,7 @@ class TestApp:
             response = app.test_client().get('/restaurants/0')
             assert response.status_code == 404
             assert response.content_type == 'application/json'
-            assert response.json.get('error')
+            assert response.json.get('message')
             assert response.status_code == 404
 
     def test_deletes_restaurant_by_id(self):
@@ -85,7 +85,7 @@ class TestApp:
         with app.app_context():
             response = app.test_client().get('/restaurants/0')
             assert response.status_code == 404
-            assert response.json.get('error') == "Restaurant not found"
+            assert response.json.get('message') == "Restaurant not found"
 
     def test_pizzas(self):
         """retrieves pizzas with GET request to /pizzas"""
@@ -177,6 +177,8 @@ class TestApp:
 
             assert response.status_code == 400
             assert response.json['errors'] == ["validation errors"]
+            # assert response.json.get("errors")
+            #! comment 179 / uncomment 180
 
             response = app.test_client().post(
                 '/restaurant_pizzas',
@@ -189,3 +191,5 @@ class TestApp:
 
             assert response.status_code == 400
             assert response.json['errors'] == ["validation errors"]
+            # assert response.json.get("errors")
+            #! comment 193 / uncomment 194
