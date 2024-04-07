@@ -55,8 +55,7 @@ def get_instance_by_id(model, id):
 def index():
     return "<h1>Code challenge</h1>"
 
-#! new
-# Base class for resources
+# Base class for CRUD resource classes
 class BaseResource(Resource):
     model = None
     fields = None
@@ -92,81 +91,9 @@ class Pizzas(BaseResource):
     model = Pizza
     fields = ("ingredients", "id", "name")
 
-#! older
-# class Restaurants(Resource):
-#     def get(self, id=None):
-#         try:
-#             # get all restaurants
-#             if id is None:
-#                 return get_all(Restaurant, ("address", "id", "name")), 200
-#             else:
-#                 # get restaurant by id
-#                 restaurant = get_instance_by_id(Restaurant, id)
-#                 return restaurant.to_dict(), 200
-#         except SQLAlchemyError as e:
-#             db.session.rollback()
-#             return {"errors": str(e)}, 500
-
-#     def delete(self, id):
-#         restaurant = get_instance_by_id(Restaurant, id)
-#         db.session.delete(restaurant)
-#         db.session.commit()
-#         return "", 204
-
-
-# class Pizzas(Resource):
-#     def get(self):
-#         try:
-#             return get_all(Pizza, ("ingredients", "id", "name")), 200
-#         except SQLAlchemyError as e:
-#             db.session.rollback()
-#             return {"errors": str(e)}, 500
-
-#! old
-# class RestaurantPizzas(Resource):
-#     def post(self):
-#         try:
-#             data = request.json
-#             if data:
-#                 new_respizza = RestaurantPizza(**data)
-#                 db.session.add(new_respizza)
-#                 db.session.commit()
-#                 return new_respizza.to_dict(), 201
-#         except Exception as e:
-#             db.session.rollback()
-#             return {"errors": ["validation errors"]}, 400
-
-
-#!new
 class RestaurantPizzas(BaseResource):
     model = RestaurantPizza
     fields = ("id", "price", "restaurant", "pizza")
-
-    # def get(self, id=None):
-    #     try:
-    #         # get all restaurant pizzas
-    #         if id is None:
-    #             return get_all(RestaurantPizza), 200
-    #         else:
-    #             # get restaurant pizza by id
-    #             if respizza := get_instance_by_id(RestaurantPizza, id):
-    #                 return (
-    #                     respizza.to_dict(
-    #                         rules=(
-    #                             "id",
-    #                             "pizza",
-    #                             "restaurant",
-    #                             "price",
-    #                             "-restaurant_id",
-    #                             "-pizza_id",
-    #                         )
-    #                     ),
-    #                     200,
-    #                 )
-    #             else:
-    #                 raise NotFound(description="RestaurantPizza not found")
-    #     except SQLAlchemyError as e:
-    #         return {"errors": str(e)}, 500
 
     def post(self):
         data = request.json
@@ -239,8 +166,6 @@ class RestaurantPizzas(BaseResource):
             return {"errors": str(e)}, 400
 
 
-# api.add_resource(Restaurants, "/restaurants")
-# api.add_resource(RestaurantById, "/restaurants/<int:id>")
 api.add_resource(Pizzas, "/pizzas")
 api.add_resource(Restaurants, "/restaurants", "/restaurants/<int:id>")
 api.add_resource(RestaurantPizzas, "/restaurant_pizzas", "/restaurant_pizzas/<int:id>")
