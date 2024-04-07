@@ -109,7 +109,7 @@ class RestaurantPizza(db.Model, SerializerMixin):
             ):
                 raise ValueError(f"{model.__name__} not found")
         elif key == "price":
-            if not isinstance(value, int):
+            if not isinstance(value, (int, float)):
                 raise TypeError("Price must be an integer")
             if not (1 <= value <= 30):
                 raise ValueError("Price must be between 1 and 30")

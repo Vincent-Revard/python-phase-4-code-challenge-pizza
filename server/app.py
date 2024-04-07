@@ -55,35 +55,72 @@ def get_instance_by_id(model, id):
 def index():
     return "<h1>Code challenge</h1>"
 
+#! new
+# Base class for resources
+class BaseResource(Resource):
+    model = None
+    fields = None
 
-class Restaurants(Resource):
     def get(self, id=None):
         try:
-            # get all restaurants
             if id is None:
-                return get_all(Restaurant, ("address", "id", "name")), 200
+                return get_all(self.model, self.fields), 200
             else:
-                # get restaurant by id
-                restaurant = get_instance_by_id(Restaurant, id)
-                return restaurant.to_dict(), 200
+                instance = get_instance_by_id(self.model, id)
+                return instance.to_dict(), 200
         except SQLAlchemyError as e:
             db.session.rollback()
             return {"errors": str(e)}, 500
 
     def delete(self, id):
-        restaurant = get_instance_by_id(Restaurant, id)
-        db.session.delete(restaurant)
+        instance = get_instance_by_id(self.model, id)
+        db.session.delete(instance)
         db.session.commit()
         return "", 204
+    
+    def post(self):
+        raise NotImplementedError("This method must be overridden.")
+
+    def patch(self, id):
+        raise NotImplementedError("This method must be overridden.")
+
+class Restaurants(BaseResource):
+    model = Restaurant
+    fields = ("address", "id", "name")
+
+class Pizzas(BaseResource):
+    model = Pizza
+    fields = ("ingredients", "id", "name")
+
+#! older
+# class Restaurants(Resource):
+#     def get(self, id=None):
+#         try:
+#             # get all restaurants
+#             if id is None:
+#                 return get_all(Restaurant, ("address", "id", "name")), 200
+#             else:
+#                 # get restaurant by id
+#                 restaurant = get_instance_by_id(Restaurant, id)
+#                 return restaurant.to_dict(), 200
+#         except SQLAlchemyError as e:
+#             db.session.rollback()
+#             return {"errors": str(e)}, 500
+
+#     def delete(self, id):
+#         restaurant = get_instance_by_id(Restaurant, id)
+#         db.session.delete(restaurant)
+#         db.session.commit()
+#         return "", 204
 
 
-class Pizzas(Resource):
-    def get(self):
-        try:
-            return get_all(Pizza, ("ingredients", "id", "name")), 200
-        except SQLAlchemyError as e:
-            db.session.rollback()
-            return {"errors": str(e)}, 500
+# class Pizzas(Resource):
+#     def get(self):
+#         try:
+#             return get_all(Pizza, ("ingredients", "id", "name")), 200
+#         except SQLAlchemyError as e:
+#             db.session.rollback()
+#             return {"errors": str(e)}, 500
 
 #! old
 # class RestaurantPizzas(Resource):
@@ -99,34 +136,37 @@ class Pizzas(Resource):
 #             db.session.rollback()
 #             return {"errors": ["validation errors"]}, 400
 
-#!new
-class RestaurantPizzas(Resource):
 
-    def get(self, id=None):
-        try:
-            # get all restaurant pizzas
-            if id is None:
-                return get_all(RestaurantPizza), 200
-            else:
-                # get restaurant pizza by id
-                if respizza := get_instance_by_id(RestaurantPizza, id):
-                    return (
-                        respizza.to_dict(
-                            rules=(
-                                "id",
-                                "pizza",
-                                "restaurant",
-                                "price",
-                                "-restaurant_id",
-                                "-pizza_id",
-                            )
-                        ),
-                        200,
-                    )
-                else:
-                    raise NotFound(description="RestaurantPizza not found")
-        except SQLAlchemyError as e:
-            return {"errors": str(e)}, 500
+#!new
+class RestaurantPizzas(BaseResource):
+    model = RestaurantPizza
+    fields = ("id", "price", "restaurant", "pizza")
+
+    # def get(self, id=None):
+    #     try:
+    #         # get all restaurant pizzas
+    #         if id is None:
+    #             return get_all(RestaurantPizza), 200
+    #         else:
+    #             # get restaurant pizza by id
+    #             if respizza := get_instance_by_id(RestaurantPizza, id):
+    #                 return (
+    #                     respizza.to_dict(
+    #                         rules=(
+    #                             "id",
+    #                             "pizza",
+    #                             "restaurant",
+    #                             "price",
+    #                             "-restaurant_id",
+    #                             "-pizza_id",
+    #                         )
+    #                     ),
+    #                     200,
+    #                 )
+    #             else:
+    #                 raise NotFound(description="RestaurantPizza not found")
+    #     except SQLAlchemyError as e:
+    #         return {"errors": str(e)}, 500
 
     def post(self):
         data = request.json
@@ -157,7 +197,7 @@ class RestaurantPizzas(Resource):
             return {"errors": ["validation errors"]}, 400
         #! uncomment 114-119 and comment 120-122 +
         #! follow comment instructions under def test_400_for_validation_error(self):
-        #! that is within app_test.py line 181/195
+        #! that is within app_test.py line 183/194 + comment 195-197
 
     def patch(self, id):
         data = request.json
@@ -202,8 +242,8 @@ class RestaurantPizzas(Resource):
 # api.add_resource(Restaurants, "/restaurants")
 # api.add_resource(RestaurantById, "/restaurants/<int:id>")
 api.add_resource(Pizzas, "/pizzas")
-api.add_resource(RestaurantPizzas, "/restaurant_pizzas", "/restaurant_pizzas/<int:id>")
 api.add_resource(Restaurants, "/restaurants", "/restaurants/<int:id>")
+api.add_resource(RestaurantPizzas, "/restaurant_pizzas", "/restaurant_pizzas/<int:id>")
 
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
